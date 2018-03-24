@@ -1,5 +1,7 @@
 unsigned int yp = 0;
 unsigned int yn = 0;
+unsigned int x_L = 0;
+unsigned int x_R = 0;
 unsigned int i = 0;         //index
 
 
@@ -43,26 +45,53 @@ void loop() {
             //get which pixels triggered
             amg.getInterrupt(pixelInts);
 
-            /* ------- Algorithm to calculate the sum of bottom half and top half */
-            yp = 0;
-            yn = 0;
-            for(i = 0; i < 4; i++){
-                yp += pixelInts[i];
-            }
-            for(i = 4; i<8; i++){
-                yn += pixelInts[i];
-            }
             Serial.println("**** interrupt received! ****");
             for(int i=0; i<8; i++){
-              Serial.println(pixelInts[i], BIN);
+                Serial.println(pixelInts[i], BIN);
             }
-            if(yn <  yp){
-               Serial. println("move up");
+            Serial.println();
+
+            /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half */
+//            yp = 0;
+//            yn = 0;
+//            for(i = 0; i < 4; i++){
+//                yp += pixelInts[i];
+//            }
+//            for(i = 4; i<8; i++){
+//                yn += pixelInts[i];
+//            }
+//
+//            if(yn <  yp) 
+//            {
+//               Serial. println("move up");
+//               // TO-DO: move the servo
+//            }
+//            else
+//            {
+//                Serial.println("move down");
+//                // TO-DO: move the servo
+//            }
+
+            /* ------ Finished Calculation -------- */
+
+
+            /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half */
+            x_L = 0;
+            x_R = 0;
+           int value = 0;
+            for(i=0; i<8; i++){
+                value = pixelInts[i];
+                Serial.print("value of 8bit array: "); Serial.println(value);
             }
-            else
-            {
-                Serial.println("move down");
+            
+            for(i = 0; i < 4; i++){
+                x_L += pixelInts[i];
             }
+            for(i = 4; i<8; i++){
+                x_R += pixelInts[i];
+            }
+          
+
             Serial.println();
 
             /* ------ Finished Calculation -------- */
