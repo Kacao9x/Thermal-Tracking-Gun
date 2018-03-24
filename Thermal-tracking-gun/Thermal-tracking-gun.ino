@@ -4,8 +4,11 @@ unsigned int y_N = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
 
+/* variable for moving servos */
 int xPos = 0;
-int yPos;= 0;
+int yPos = 0;
+
+
 
 unsigned int i = 0, j = 0;         //index
 char dir[2];
@@ -78,23 +81,51 @@ void loop() {
         check_left_right_half_with_fire();        
         /* ------ Finished Horizontal Calculation -------- */
         
+        if (!FIRE) {
+            comparePositionValue();
+        }
+
         //clear the interrupt so we can get the next one!
         amg.clearInterrupt();       // clear Interrupt
         intReceived = false;        // reset the interrupt flag
 
 
-        if(FIRE == true){
-            digitalWrite(10, HIGH);
-        } else  {
-            digitalWrite(10, LOW);
-        }
+        // if(FIRE == true){
+        //     digitalWrite(10, HIGH);
+        // } else  {
+        //     digitalWrite(10, LOW);
+        // }
+
+
     }
     
     
 
 }
 
+void comparePositionValue() {
+    /* move vertically */
+    if(y_N <  y_P) {
+        Serial. println("move up");
+        move_gun('U');
+        // TO-DO: move the servo
+    } else {
+        Serial.println("move down");
+        move_gun('D');
+        // TO-DO: move the servo
+    }
 
+    /* move horizontally */
+    if (x_L < x_R) {
+        Serial.println("move Right");
+        move_gun('R');
+        //move right;
+    } else {
+        Serial.println("move Left");
+        move_gun('L');
+        //move left;
+    }
+}
 
 void move_gun(const char* dir) {
     switch (*dir) {
@@ -161,7 +192,8 @@ void check_left_right_half_with_fire(){
                 x_R += 1;
                 /* check if the central bit value is 1 */
                 if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
-                    FIRE = true;
+                    //FIRE = true;
+                    gun_fire(FIRE_BUTTON);
                 }
                 //value >> 1; // divide by 2: not working b/c value is int value
                 value /= 2;
@@ -176,7 +208,8 @@ void check_left_right_half_with_fire(){
                 x_L +=1;
                 /* check if the central bit value is 1 */
                 if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
-                    FIRE = true;
+                    // FIRE = true;
+                    gun_fire(FIRE_BUTTON);
                 }
                 value /= 2;
             } else {
