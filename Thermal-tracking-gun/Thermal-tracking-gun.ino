@@ -81,20 +81,29 @@ void loop() {
         check_left_right_half_with_fire();        
         /* ------ Finished Horizontal Calculation -------- */
         
+
         if (!FIRE) {
+            long timeTracker = millis();
             comparePositionValue();
+            if (millis() - timeTracker < 300) {
+                gun_fire(FIRE_BUTTON);
+                FIRE = true;
+            } else {
+                gun_fire_hold(FIRE_BUTTON);
+            }
+
         }
 
         //clear the interrupt so we can get the next one!
         amg.clearInterrupt();       // clear Interrupt
         intReceived = false;        // reset the interrupt flag
 
-
-        // if(FIRE == true){
-        //     digitalWrite(10, HIGH);
-        // } else  {
-        //     digitalWrite(10, LOW);
-        // }
+//
+//         if(FIRE == true){
+//             digitalWrite(10, HIGH);
+//         } else  {
+//             digitalWrite(10, LOW);
+//         }
 
 
     }
@@ -103,6 +112,7 @@ void loop() {
 
 }
 
+/* !!!!!!!!! Need to check how fast the servo can move */
 void comparePositionValue() {
     /* move vertically */
     if(y_N <  y_P) {
@@ -192,7 +202,7 @@ void check_left_right_half_with_fire(){
                 x_R += 1;
                 /* check if the central bit value is 1 */
                 if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
-                    //FIRE = true;
+                    FIRE = true;
                     gun_fire(FIRE_BUTTON);
                 }
                 //value >> 1; // divide by 2: not working b/c value is int value
@@ -208,7 +218,7 @@ void check_left_right_half_with_fire(){
                 x_L +=1;
                 /* check if the central bit value is 1 */
                 if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
-                    // FIRE = true;
+                    FIRE = true;
                     gun_fire(FIRE_BUTTON);
                 }
                 value /= 2;
@@ -228,6 +238,10 @@ void check_left_right_half_with_fire(){
 //         }
 }
 
+//void gun_fire(unsigned int pinNumber) {
+//    
+//}
+
 void gun_fire(unsigned int pinNumber) {
     digitalWrite (pinNumber, HIGH);   //Need caliberation: how long to set the PIN high to fire?
     delay (500);                        //CAUTION: system_delay --> use timer here
@@ -235,6 +249,9 @@ void gun_fire(unsigned int pinNumber) {
     delay (100);
 }
 
+void gun_fire_hold(unsigned pinNumber) {
+    digitalWrite(pinNumber, LOW);
+}
 void thermal_sensor_init() {
     bool status;
     
