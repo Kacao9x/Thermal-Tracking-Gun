@@ -1,5 +1,5 @@
-unsigned int y_p = 0;
-unsigned int y_n = 0;
+unsigned int y_P = 0;
+unsigned int y_N = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
 unsigned int i = 0, j = 0;         //index
@@ -11,10 +11,15 @@ bool FIRE = false;
 #include <Adafruit_AMG88xx.h>
 #include "Servo.h"
 
+/* variables for controlling servo */
 #define SERVO_X     A2              //horizonal servo
 #define SERVO_Y     A3              //vertical servo
 Servo servoMotor_X, servoMotor_Y;
 
+/* variables for controlling Trigger (FIRE) of the gun */
+#define FIRE_BUTTON 10
+
+/* variables for thermal sensor */
 Adafruit_AMG88xx amg;
 
 //INT pin from the sensor board goes to this pin on your microcontroller board
@@ -38,14 +43,16 @@ void setup() {
     servo_init();
     thermal_sensor_init();
     thermal_sensor_interrupt_init();
+
+    pinMode(FIRE_BUTTON, OUTPUT);
     
 }
 
 
 void loop() {
     FIRE = false;
-    y_p = 0;
-    y_n = 0;
+    y_P = 0;
+    y_N = 0;
     
     if(intReceived){
         //get which pixels triggered
@@ -54,14 +61,14 @@ void loop() {
         Serial.println("**** interrupt received! ****");
 
         /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half */
-        //y_p = 0;
-        //y_n = 0;
+        //y_P = 0;
+        //y_N = 0;
         sum_bottom_and_top_half();
-        if(y_n <  y_p) {
-            Serial. println("move up");
+        if(y_N <  y_P) {
+            move_gun('U');
             // TO-DO: move the servo
         } else {
-            Serial.println("move down");
+            move_gun('D');
             // TO-DO: move the servo
         }
 
@@ -109,17 +116,19 @@ void loop() {
 
         /* MOVE the gun to the right spot */
         if (x_L < x_R) {
-            Serial.println("move Right");
+            //Serial.println("move Right");
+            move_gun("RD");
             //move right;
         } else {
-            Serial.println("move Left");
+            //Serial.println("move Left");
+            move_gun("LU");
             //move left;
         }
         
         Serial.println();
         if (FIRE == true ) {
             Serial.println("FIREEEEE");
-            //gun_fire();
+            gun_fire();
         } else {
             Serial.println("Checkkking tartget");
         }
@@ -149,49 +158,60 @@ void move_gun(char direction) {
     switch (direction) {
         case 'L':
             //move left: servoMotor_X.write(180);       //------- increment 5 degree at a times
+            Serial.println("move left");
             break;
         case 'R':
             //move right: servoMotor_X.write(0);
+            Serial.println("move right");
             break;
         case 'U':
             //move up: servoMotor_Y.write(0);
+            Serial.println("move up");
             break;
         case 'D':
             //move down: servoMotor_Y.write(180);
+            Serial.println("move down");
             break;
         case 'RU':
             //move right: servoMotor_X.write(0);
             //move up: servoMotor_Y.write(0);
+            Serial.println("UP-RIGHT");
             break;
         case 'RD':
             //move right: servoMotor_X.write(0);
             //move down: servoMotor_Y.write(180);
+            Serial.println("RIGHT-DOWN");
             break;
         case 'LU':
             //move left: servoMotor_X.write(180);
             //move up: servoMotor_Y.write(0);
+            Serial.println("LEFT-UP");
             break;
         case 'LD':
             //move left: servoMotor_X.write(180);
             //move down: servoMotor_Y.write(180);
+            Serial.println("LEFT-DOWN");
             break;
         default:
             break;
     }
 }
 void sum_bottom_and_top_half() {
-//            y_p = 0;
-//            y_n = 0;
+//            y_P = 0;
+//            y_N = 0;
     for(i = 0; i < 4; i++) {
-        y_p += pixelInts[i];
+        y_P += pixelInts[i];
     }
     for(i = 4; i<8; i++) {
-        y_n += pixelInts[i];
+        y_N += pixelInts[i];
     }
 }
 
 void gun_fire() {
-
+    digitalWrite (FIRE_BUTTON, HIGH);   //Need caliberation: how long to set the PIN high to fire?
+    delay (500);                        //CAUTION: system_delay --> use timer here
+    digitalWrite (10, LOW);
+    delay (100);
 }
 
 void thermal_sensor_init() {
