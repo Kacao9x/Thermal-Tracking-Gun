@@ -2,7 +2,7 @@ unsigned int yp = 0;
 unsigned int yn = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
-unsigned int i = 0;         //index
+unsigned int i = 0, j = 0;         //index
 
 
 
@@ -81,15 +81,36 @@ void loop() {
            int value = 0;
             for(i=0; i<8; i++){
                 value = pixelInts[i];
-                Serial.print("value of 8bit array: "); Serial.println(value);
+                Serial.print("value of 8bit array: "); Serial.println(value);       //print out oct value
+
+                 for (j=0; j<4; j++) {
+                    if (value % 2 == 1) {
+                        x_R +=1;
+//                        value >> 1;             // divide by 2
+                        value /= 2;
+                    } else {
+//                        value >> 1;             //divide by 2
+                        value /= 2;
+                    }
+                }
+
+
+                 for (j=0; j<4; j++) {
+                    if (value % 2 == 1) {
+                        x_L +=1;
+//                        value >> 1;
+                        value /= 2;
+                    } else {
+//                        value >> 1;
+                        value /= 2;
+                    }
+                }
+
+                Serial.print("Value of X_R:     "); Serial.println(x_R);
+                Serial.print("Value of X_L:     "); Serial.println(x_L);
             }
             
-            for(i = 0; i < 4; i++){
-                x_L += pixelInts[i];
-            }
-            for(i = 4; i<8; i++){
-                x_R += pixelInts[i];
-            }
+           
           
 
             Serial.println();
