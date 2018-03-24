@@ -107,13 +107,14 @@ void loop() {
             }/* --- END of the left 4-bit interation --- */
         }   /* --- END of the row interation --- */
 
-            if (x_L < x_R) {
-                Serial.println("move Right");
-                //move right;
-            } else {
-                Serial.println("move Left");
-                //move left;
-            }
+        /* MOVE the gun to the right spot */
+        if (x_L < x_R) {
+            Serial.println("move Right");
+            //move right;
+        } else {
+            Serial.println("move Left");
+            //move left;
+        }
         
         Serial.println();
         if (FIRE == true ) {
@@ -134,6 +135,50 @@ void loop() {
 
 }
 
+// void compare_first_vs_second_half_4bits() {
+//     if (x_L < x_R) {
+//         Serial.println("move Right");
+//         //move_gun('R');
+//     } else {
+//         Serial.println("move Left");
+//         //move_gun('L');
+//     }
+// }
+
+void move_gun(char direction) {
+    switch (direction) {
+        case 'L':
+            //move left: servoMotor_X.write(180);       //------- increment 5 degree at a times
+            break;
+        case 'R':
+            //move right: servoMotor_X.write(0);
+            break;
+        case 'U':
+            //move up: servoMotor_Y.write(0);
+            break;
+        case 'D':
+            //move down: servoMotor_Y.write(180);
+            break;
+        case 'RU':
+            //move right: servoMotor_X.write(0);
+            //move up: servoMotor_Y.write(0);
+            break;
+        case 'RD':
+            //move right: servoMotor_X.write(0);
+            //move down: servoMotor_Y.write(180);
+            break;
+        case 'LU':
+            //move left: servoMotor_X.write(180);
+            //move up: servoMotor_Y.write(0);
+            break;
+        case 'LD':
+            //move left: servoMotor_X.write(180);
+            //move down: servoMotor_Y.write(180);
+            break;
+        default:
+            break;
+    }
+}
 void sum_bottom_and_top_half() {
 //            y_p = 0;
 //            y_n = 0;
