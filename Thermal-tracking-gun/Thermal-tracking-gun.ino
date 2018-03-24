@@ -1,12 +1,22 @@
+/* variables */
 unsigned int y_P = 0;
 unsigned int y_N = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
+
+int xPos = 0;
+int yPos;= 0;
+
 unsigned int i = 0, j = 0;         //index
 char dir[2];
 
 bool FIRE = false;
 
+#define x_max       135
+#define x_min       45
+
+#define y_max
+#define y_min
 
 #include <Wire.h>
 #include <Adafruit_AMG88xx.h>
@@ -19,7 +29,6 @@ Servo servoMotor_X, servoMotor_Y;
 
 /* variables for controlling Trigger (FIRE) of the gun */
 #define FIRE_BUTTON     10
-#define TRIGGER_READY 9
 
 /* variables for thermal sensor */
 Adafruit_AMG88xx amg;
@@ -55,6 +64,7 @@ void setup() {
 void loop() {
     /* reset variable */
     clearVar();
+    
     if(intReceived){
         //get which pixels triggered
         amg.getInterrupt(pixelInts);
@@ -62,20 +72,25 @@ void loop() {
 
         /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half ----- */
         check_bottom_and_top_half();
-
         /* ------ Finished Vertial Calculation -------- */
 
-
         /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half ------- */
-        check_left_right_half_with_fire();
-        
-
-        /* ------ Finished Calculation -------- */
+        check_left_right_half_with_fire();        
+        /* ------ Finished Horizontal Calculation -------- */
         
         //clear the interrupt so we can get the next one!
         amg.clearInterrupt();       // clear Interrupt
         intReceived = false;        // reset the interrupt flag
+
+
+        if(FIRE == true){
+            digitalWrite(10, HIGH);
+        } else  {
+            digitalWrite(10, LOW);
+        }
     }
+    
+    
 
 }
 
@@ -99,30 +114,32 @@ void move_gun(const char* dir) {
             //move down: servoMotor_Y.write(180);
             Serial.println("move down");
             break;
-//        case "RU":
-//            //move right: servoMotor_X.write(0);
-//            //move up: servoMotor_Y.write(0);
-//            Serial.println("RIGHT-UP");
-//            break;
-//        case "RD":
-//            //move right: servoMotor_X.write(0);
-//            //move down: servoMotor_Y.write(180);
-//            Serial.println("RIGHT-DOWN");
-//            break;
-//        case "LU":
-//            //move left: servoMotor_X.write(180);
-//            //move up: servoMotor_Y.write(0);
-//            Serial.println("LEFT-UP");
-//            break;
-//        case "LD":
-//            //move left: servoMotor_X.write(180);
-//            //move down: servoMotor_Y.write(180);
-//            Serial.println("LEFT-DOWN");
-//            break;
+       /*case "RU":
+           //move right: servoMotor_X.write(0);
+           //move up: servoMotor_Y.write(0);
+           Serial.println("RIGHT-UP");
+           break;
+       case "RD":
+           //move right: servoMotor_X.write(0);
+           //move down: servoMotor_Y.write(180);
+           Serial.println("RIGHT-DOWN");
+           break;
+       case "LU":
+           //move left: servoMotor_X.write(180);
+           //move up: servoMotor_Y.write(0);
+           Serial.println("LEFT-UP");
+           break;
+       case "LD":
+           //move left: servoMotor_X.write(180);
+           //move down: servoMotor_Y.write(180);
+           Serial.println("LEFT-DOWN");
+           break; */
         default:
             break;
     }
 }
+
+
 void check_bottom_and_top_half() {
     for(i = 0; i < 4; i++) {
         y_P += pixelInts[i];
@@ -238,7 +255,7 @@ void clearVar(){
     FIRE = false;
 }
 
-void checTrigger(){
+void checTrigger() {
     
 }
 
