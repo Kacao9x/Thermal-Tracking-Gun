@@ -3,6 +3,7 @@ unsigned int y_N = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
 unsigned int i = 0, j = 0;         //index
+char dir[2];
 
 bool FIRE = false;
 
@@ -17,7 +18,8 @@ bool FIRE = false;
 Servo servoMotor_X, servoMotor_Y;
 
 /* variables for controlling Trigger (FIRE) of the gun */
-#define FIRE_BUTTON 10
+#define FIRE_BUTTON     10
+#define TRIGGER_READY 9
 
 /* variables for thermal sensor */
 Adafruit_AMG88xx amg;
@@ -43,6 +45,7 @@ void setup() {
     servo_init();
     thermal_sensor_init();
     thermal_sensor_interrupt_init();
+    delay(1000);                                //let the sensor caliberate the room temp
 
     pinMode(FIRE_BUTTON, OUTPUT);
     
@@ -50,90 +53,22 @@ void setup() {
 
 
 void loop() {
-    FIRE = false;
-    y_P = 0;
-    y_N = 0;
-    
+    /* reset variable */
+    clearVar();
     if(intReceived){
         //get which pixels triggered
         amg.getInterrupt(pixelInts);
-
         Serial.println("**** interrupt received! ****");
 
-        /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half */
-        //y_P = 0;
-        //y_N = 0;
-        sum_bottom_and_top_half();
-        if(y_N <  y_P) {
-            move_gun('U');
-            // TO-DO: move the servo
-        } else {
-            move_gun('D');
-            // TO-DO: move the servo
-        }
+        /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half ----- */
+        check_bottom_and_top_half();
 
-        /* ------ Finished Calculation -------- */
+        /* ------ Finished Vertial Calculation -------- */
 
 
-        /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half */
-        x_L = 0;
-        x_R = 0;
-        int value = 0;
+        /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half ------- */
+        check_left_right_half_with_fire();
         
-        for(i=0; i<8; i++) {
-            value = pixelInts[i];
-            //Serial.print("value of 8bit array: "); Serial.println(value);       //print out octal value
-
-            /* calculate the right 4 bits */
-            for (j=0; j<4; j++) {
-                if (value % 2 == 1) {
-                    x_R += 1;
-                    /* check if the central bit value is 1 */
-                    if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
-                        FIRE = true;
-                    }
-                    //value >> 1; // divide by 2: not working b/c value is int value
-                    value /= 2;
-                } else {
-                    value /= 2;
-                }
-            } /* --- END of the right 4-bit interation --- */
-
-            /* calculate the left 4 bits */
-            for (j=0; j<4; j++) {
-                if (value % 2 == 1) {
-                    x_L +=1;
-                    /* check if the central bit value is 1 */
-                    if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
-                        FIRE = true;
-                    }
-                    value /= 2;
-                } else {
-                    value /= 2;
-                }
-            }/* --- END of the left 4-bit interation --- */
-        }   /* --- END of the row interation --- */
-
-        /* MOVE the gun to the right spot */
-        if (x_L < x_R) {
-            //Serial.println("move Right");
-            move_gun("RD");
-            //move right;
-        } else {
-            //Serial.println("move Left");
-            move_gun("LU");
-            //move left;
-        }
-        
-        Serial.println();
-        if (FIRE == true ) {
-            Serial.println("FIREEEEE");
-            gun_fire();
-        } else {
-            Serial.println("Checkkking tartget");
-        }
-        
-        Serial.println();
 
         /* ------ Finished Calculation -------- */
         
@@ -144,18 +79,10 @@ void loop() {
 
 }
 
-// void compare_first_vs_second_half_4bits() {
-//     if (x_L < x_R) {
-//         Serial.println("move Right");
-//         //move_gun('R');
-//     } else {
-//         Serial.println("move Left");
-//         //move_gun('L');
-//     }
-// }
 
-void move_gun(char direction) {
-    switch (direction) {
+
+void move_gun(const char* dir) {
+    switch (*dir) {
         case 'L':
             //move left: servoMotor_X.write(180);       //------- increment 5 degree at a times
             Serial.println("move left");
@@ -172,33 +99,31 @@ void move_gun(char direction) {
             //move down: servoMotor_Y.write(180);
             Serial.println("move down");
             break;
-        case 'RU':
-            //move right: servoMotor_X.write(0);
-            //move up: servoMotor_Y.write(0);
-            Serial.println("UP-RIGHT");
-            break;
-        case 'RD':
-            //move right: servoMotor_X.write(0);
-            //move down: servoMotor_Y.write(180);
-            Serial.println("RIGHT-DOWN");
-            break;
-        case 'LU':
-            //move left: servoMotor_X.write(180);
-            //move up: servoMotor_Y.write(0);
-            Serial.println("LEFT-UP");
-            break;
-        case 'LD':
-            //move left: servoMotor_X.write(180);
-            //move down: servoMotor_Y.write(180);
-            Serial.println("LEFT-DOWN");
-            break;
+//        case "RU":
+//            //move right: servoMotor_X.write(0);
+//            //move up: servoMotor_Y.write(0);
+//            Serial.println("RIGHT-UP");
+//            break;
+//        case "RD":
+//            //move right: servoMotor_X.write(0);
+//            //move down: servoMotor_Y.write(180);
+//            Serial.println("RIGHT-DOWN");
+//            break;
+//        case "LU":
+//            //move left: servoMotor_X.write(180);
+//            //move up: servoMotor_Y.write(0);
+//            Serial.println("LEFT-UP");
+//            break;
+//        case "LD":
+//            //move left: servoMotor_X.write(180);
+//            //move down: servoMotor_Y.write(180);
+//            Serial.println("LEFT-DOWN");
+//            break;
         default:
             break;
     }
 }
-void sum_bottom_and_top_half() {
-//            y_P = 0;
-//            y_N = 0;
+void check_bottom_and_top_half() {
     for(i = 0; i < 4; i++) {
         y_P += pixelInts[i];
     }
@@ -207,10 +132,56 @@ void sum_bottom_and_top_half() {
     }
 }
 
-void gun_fire() {
-    digitalWrite (FIRE_BUTTON, HIGH);   //Need caliberation: how long to set the PIN high to fire?
+void check_left_right_half_with_fire(){
+    int value = 0;
+    for(i=0; i<8; i++) {
+        value = pixelInts[i];
+        //Serial.print("value of 8bit array: "); Serial.println(value);       //print out octal value
+
+        /* calculate the right 4 bits */
+        for (j=0; j<4; j++) {
+            if (value % 2 == 1) {
+                x_R += 1;
+                /* check if the central bit value is 1 */
+                if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
+                    FIRE = true;
+                }
+                //value >> 1; // divide by 2: not working b/c value is int value
+                value /= 2;
+            } else {
+                value /= 2;
+            }
+        } /* --- END of the right 4-bit interation --- */
+
+        /* calculate the left 4 bits */
+        for (j=0; j<4; j++) {
+            if (value % 2 == 1) {
+                x_L +=1;
+                /* check if the central bit value is 1 */
+                if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
+                    FIRE = true;
+                }
+                value /= 2;
+            } else {
+                value /= 2;
+            }
+        }/* --- END of the left 4-bit interation --- */
+    }   /* --- END of the row interation --- */
+
+    /* FIRE test on serial monitor*/
+//     Serial.println();
+//         if (FIRE == true ) {
+//             Serial.println("FIREEEEE");
+//             gun_fire(FIRE_BUTTON);
+//         } else {
+//             Serial.println("Checkkking target");
+//         }
+}
+
+void gun_fire(unsigned int pinNumber) {
+    digitalWrite (pinNumber, HIGH);   //Need caliberation: how long to set the PIN high to fire?
     delay (500);                        //CAUTION: system_delay --> use timer here
-    digitalWrite (10, LOW);
+    digitalWrite (pinNumber, LOW);
     delay (100);
 }
 
@@ -256,4 +227,39 @@ void servo_init() {
 /* INTERRUPT activity: KEEP IT SHORT to avoid CPU overhead */
 void AMG88xx_ISR() {
     intReceived = true;
+}
+
+void clearVar(){
+    x_L = 0;
+    x_R = 0;
+    y_N = 0;
+    y_P = 0;
+
+    FIRE = false;
+}
+
+void checTrigger(){
+    
+}
+
+void moveFireUD() {
+    if(y_N <  y_P) {
+        move_gun('U');
+        // TO-DO: move the servo
+    } else {
+        move_gun('D');
+        // TO-DO: move the servo
+    }
+}
+
+void moveFireLR() {
+    if (x_L < x_R) {
+        //Serial.println("move Right");
+        *dir = "RD";
+        move_gun(dir);
+    } else {
+        //Serial.println("move Left");
+        *dir = "LU";
+        move_gun(dir);
+    }
 }
