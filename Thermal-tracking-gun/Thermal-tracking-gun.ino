@@ -46,31 +46,31 @@ void loop() {
             amg.getInterrupt(pixelInts);
 
             Serial.println("**** interrupt received! ****");
-            for(int i=0; i<8; i++){
-                Serial.println(pixelInts[i], BIN);
-            }
-            Serial.println();
+//            for(int i=0; i<8; i++){
+//                Serial.println(pixelInts[i], BIN);
+//            }
+//            Serial.println();
 
             /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half */
-//            yp = 0;
-//            yn = 0;
-//            for(i = 0; i < 4; i++){
-//                yp += pixelInts[i];
-//            }
-//            for(i = 4; i<8; i++){
-//                yn += pixelInts[i];
-//            }
-//
-//            if(yn <  yp) 
-//            {
-//               Serial. println("move up");
-//               // TO-DO: move the servo
-//            }
-//            else
-//            {
-//                Serial.println("move down");
-//                // TO-DO: move the servo
-//            }
+            yp = 0;
+            yn = 0;
+            for(i = 0; i < 4; i++){
+                yp += pixelInts[i];
+            }
+            for(i = 4; i<8; i++){
+                yn += pixelInts[i];
+            }
+
+            if(yn <  yp) 
+            {
+               Serial. println("move up");
+               // TO-DO: move the servo
+            }
+            else
+            {
+                Serial.println("move down");
+                // TO-DO: move the servo
+            }
 
             /* ------ Finished Calculation -------- */
 
@@ -78,15 +78,16 @@ void loop() {
             /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half */
             x_L = 0;
             x_R = 0;
-           int value = 0;
+            int value = 0;
             for(i=0; i<8; i++){
                 value = pixelInts[i];
-                Serial.print("value of 8bit array: "); Serial.println(value);       //print out oct value
+                //Serial.print("value of 8bit array: "); Serial.println(value);       //print out oct value
 
+                /* calculate the right 4 bits */
                  for (j=0; j<4; j++) {
                     if (value % 2 == 1) {
                         x_R +=1;
-//                        value >> 1;             // divide by 2
+//                        value >> 1;             // divide by 2: not working bc value is int value
                         value /= 2;
                     } else {
 //                        value >> 1;             //divide by 2
@@ -94,7 +95,7 @@ void loop() {
                     }
                 }
 
-
+                /* calculate the left 4 bits */
                  for (j=0; j<4; j++) {
                     if (value % 2 == 1) {
                         x_L +=1;
@@ -105,10 +106,15 @@ void loop() {
                         value /= 2;
                     }
                 }
-
-                Serial.print("Value of X_R:     "); Serial.println(x_R);
-                Serial.print("Value of X_L:     "); Serial.println(x_L);
             }
+
+                if (x_L < x_R) {
+                    Serial.println("move Right");
+                    //move right;
+                } else {
+                    Serial.println("move Left");
+                    //move left;
+                }
             
            
           
