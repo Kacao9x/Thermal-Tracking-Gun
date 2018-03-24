@@ -4,6 +4,7 @@ unsigned int x_L = 0;
 unsigned int x_R = 0;
 unsigned int i = 0, j = 0;         //index
 
+bool FIRE = false;
 
 
 #include <Wire.h>
@@ -22,8 +23,8 @@ Adafruit_AMG88xx amg;
 //interrupt levels (in degrees C)
 //any reading on any pixel above TEMP_INT_HIGH degrees C, or under TEMP_INT_LOW degrees C will trigger an interrupt
 //30 degrees should trigger when you wave your hand in front of the sensor
-#define TEMP_INT_HIGH 30
-#define TEMP_INT_LOW 15
+#define TEMP_INT_HIGH 26
+#define TEMP_INT_LOW 10
 
 volatile bool intReceived = false;
 uint8_t pixelInts[8];
@@ -41,6 +42,10 @@ void setup() {
 }
 
 void loop() {
+      FIRE = false;
+      yp = 0;
+      yn = 0;
+      
       if(intReceived){
             //get which pixels triggered
             amg.getInterrupt(pixelInts);
@@ -52,8 +57,8 @@ void loop() {
 //            Serial.println();
 
             /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half */
-            yp = 0;
-            yn = 0;
+//            yp = 0;
+//            yn = 0;
             for(i = 0; i < 4; i++){
                 yp += pixelInts[i];
             }
@@ -79,34 +84,41 @@ void loop() {
             x_L = 0;
             x_R = 0;
             int value = 0;
-            for(i=0; i<8; i++){
+            
+            for(i=0; i<8; i++) {
                 value = pixelInts[i];
-                //Serial.print("value of 8bit array: "); Serial.println(value);       //print out oct value
+                //Serial.print("value of 8bit array: "); Serial.println(value);       //print out octal value
 
                 /* calculate the right 4 bits */
                  for (j=0; j<4; j++) {
                     if (value % 2 == 1) {
                         x_R +=1;
+                        if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
+                            FIRE = true;
+                        }
 //                        value >> 1;             // divide by 2: not working bc value is int value
                         value /= 2;
                     } else {
 //                        value >> 1;             //divide by 2
                         value /= 2;
                     }
-                }
+                } /* --- END of the right 4-bit interation --- */
 
                 /* calculate the left 4 bits */
                  for (j=0; j<4; j++) {
                     if (value % 2 == 1) {
                         x_L +=1;
+                        if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
+                            FIRE = true;
+                        }
 //                        value >> 1;
                         value /= 2;
                     } else {
 //                        value >> 1;
                         value /= 2;
                     }
-                }
-            }
+                }/* --- END of the left 4-bit interation --- */
+            }   /* --- END of the row interation --- */
 
                 if (x_L < x_R) {
                     Serial.println("move Right");
@@ -119,6 +131,13 @@ void loop() {
            
           
 
+            Serial.println();
+            if (FIRE == true ) {
+                Serial.println("FIREEEEE");
+            } else {
+                Serial.println("Checkkking tartget");
+            }
+            
             Serial.println();
 
             /* ------ Finished Calculation -------- */

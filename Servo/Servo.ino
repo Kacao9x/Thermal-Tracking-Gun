@@ -23,6 +23,7 @@ void loop() {
 
     /* read value from sensor */
     //angle = maxValue();
+    
     angle_10bit_readout = 511;                          //dummy value
     angle_degree = map(angle_10bit_readout, 0, 1023, 0, 179);
     servoMotor.write(angle_degree);
