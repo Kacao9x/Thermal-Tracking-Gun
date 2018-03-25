@@ -1,12 +1,9 @@
-/* variables */
 unsigned int y_P = 0;
 unsigned int y_N = 0;
 unsigned int x_L = 0;
 unsigned int x_R = 0;
-
-/* variable for moving servos */
-int xPos = 90;
-int yPos = 90;
+unsigned int i = 0, j = 0;         //index
+char dir[2];
 
 #define x_min 45
 #define x_max 135
@@ -14,11 +11,12 @@ int yPos = 90;
 #define y_min 25
 #define y_max 115
 
-unsigned int i = 0, j = 0;         //index
-char dir[2];
+int xPos = 90;
+int yPos = 90;
 
 bool FIRE = false;
 unsigned long fireDelay = 0;
+
 unsigned long searchDelay = 0;
 
 #include <Wire.h>
@@ -32,9 +30,10 @@ Servo servoMotor_X, servoMotor_Y;
 
 /* variables for controlling Trigger (FIRE) of the gun */
 #define FIRE_BUTTON     8
-
-/* variables for thermal sensor */
+#define TRIGGER_READY   9
+// variables for thermal sensor */
 Adafruit_AMG88xx amg;
+
 
 //INT pin from the sensor board goes to this pin on your microcontroller board
 #define INT_PIN 3
@@ -47,14 +46,6 @@ Adafruit_AMG88xx amg;
 
 volatile bool intReceived = false;
 uint8_t pixelInts[8];
-
-void servo_init();
-void thermal_sensor_init();
-void thermal_sensor_interrupt_init();
-void clearVar();
-void moveGun();
-void check_bottom_and_top_half();
-void check_left_right_half_with_fire();
 
 void setup() {
     Serial.begin(9600);
@@ -75,26 +66,26 @@ void setup() {
 void loop() {
     /* reset variable */
     clearVar();
-    
-    if(intReceived) {
+    if(intReceived){
         searchDelay = millis();
-
         //get which pixels triggered
         amg.getInterrupt(pixelInts);
         Serial.println("**** interrupt received! ****");
 
         /* ------- VERTICAL: Algorithm to calculate the sum of bottom half and top half ----- */
         check_bottom_and_top_half();
+
         /* ------ Finished Vertial Calculation -------- */
 
         /* ------- HORIZONTAL: Algorithm to calculate the sum of left half and right half ------- */
-        check_left_right_half_with_fire();        
-        /* ------ Finished Horizontal Calculation -------- */
+        check_left_right_half_with_fire();
+        
+        /* ------ Finished Calculation -------- */
         
         //clear the interrupt so we can get the next one!
         amg.clearInterrupt();       // clear Interrupt
         intReceived = false;        // reset the interrupt flag
-        
+
         //Start shooting
         Serial.println(FIRE);
          if (FIRE == true) {
@@ -106,8 +97,7 @@ void loop() {
 
         moveGun();
          
-    } /* ------ END of Interrupt trigger received -------- */
-
+    }
     if(millis() - fireDelay > 1000){
         digitalWrite(FIRE_BUTTON, HIGH);
     }
@@ -115,46 +105,7 @@ void loop() {
     if(millis() - searchDelay > 1000){
       // start searching 
     }
-        
-        // if (!FIRE) {
-        //     long timeTracker = millis();
-        //     comparePositionValue();
-        //     if (millis() - timeTracker < 300) {
-        //         gun_fire(FIRE_BUTTON);
-        //         FIRE = true;
-        //         Serial.println("chasinggggg and fire");
-        //     } else {
-        //         gun_fire_hold(FIRE_BUTTON);
-        //         Serial.println("HOLDD");
-        //     }
 
-        // }
-
-} /* ------ END of MAIN LOOP -------- */
-
-/* !!!!!!!!! Need to check how fast the servo can move */
-void comparePositionValue() {
-    /* move vertically */
-    if(y_N <  y_P) {
-        Serial. println("move up");
-        move_gun('U');
-        // TO-DO: move the servo
-    } else {
-        Serial.println("move down");
-        move_gun('D');
-        // TO-DO: move the servo
-    }
-
-    /* move horizontally */
-    if (x_L < x_R) {
-        Serial.println("move Right");
-        move_gun('R');
-        //move right;
-    } else {
-        Serial.println("move Left");
-        move_gun('L');
-        //move left;
-    }
 }
 
 
@@ -180,8 +131,6 @@ void check_left_right_half_with_fire(){
                 /* check if the central bit value is 1 */
                 if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
                     FIRE = true;
-                    gun_fire(FIRE_BUTTON);
-                    Serial.println("BANG BANG");
                 }
                 //value >> 1; // divide by 2: not working b/c value is int value
                 value /= 2;
@@ -197,8 +146,6 @@ void check_left_right_half_with_fire(){
                 /* check if the central bit value is 1 */
                 if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
                     FIRE = true;
-                    gun_fire(FIRE_BUTTON);
-                    Serial.println("BANG BANG");
                 }
                 value /= 2;
             } else {
@@ -216,7 +163,6 @@ void check_left_right_half_with_fire(){
 //             Serial.println("Checkkking target");
 //         }
 }
-
 
 void gun_fire(unsigned int pinNumber) {
     digitalWrite (pinNumber, HIGH);   //Need caliberation: how long to set the PIN high to fire?
@@ -301,27 +247,4 @@ void moveGun(){
       servoMotor_Y.write(yPos);
     }
   }
-}
-
-void move_gun(const char* dir) {
-    switch (*dir) {
-        case 'L':
-            //move left: servoMotor_X.write(180);       //------- increment 5 degree at a times
-            Serial.println("move left");
-            break;
-        case 'R':
-            //move right: servoMotor_X.write(0);
-            Serial.println("move right");
-            break;
-        case 'U':
-            //move up: servoMotor_Y.write(0);
-            Serial.println("move up");
-            break;
-        case 'D':
-            //move down: servoMotor_Y.write(180);
-            Serial.println("move down");
-            break;
-        default:
-            break;
-    }
 }
