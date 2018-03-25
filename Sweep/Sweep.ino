@@ -11,12 +11,16 @@
 #include <Wire.h>
 #include <Servo.h>
 
+#define alexa       12
+//#define trigger     8
+const int trigger = 8; 
+
 Adafruit_AMG88xx amg;
 float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
 
 Servo rotate;  // create servo object to control a servo
 Servo updown;
-const int trigger = 8; 
+
 // twelve servo objects can be created on most boards
 
 int pos = 0;    // variable to store the servo position
@@ -28,9 +32,14 @@ void setup() {
     amg.begin();
     delay(3000);
     pinMode(trigger,OUTPUT);        //put it to the bottom of the setup to avoid FIRE in boot-up sequence
+    pinMode(alexa, INPUT);
 }
 
 void loop() {
+    if (digitalRead(alexa) == HIGH) {
+        Serial.println("ALXA mode");
+    }
+    
     int count = 70;
     for (pos = 45; pos <= 90; pos += 2) { // goes from 0 degrees to 180 degrees
       // in steps of 1 degree

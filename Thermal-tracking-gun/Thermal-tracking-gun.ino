@@ -236,11 +236,6 @@ void servo_init() {
     servoMotor_Y.write(90);
 }
 
-/* INTERRUPT activity: KEEP IT SHORT to avoid CPU overhead */
-void AMG88xx_ISR() {
-    intReceived = true;
-}
-
 void clearVar(){
     x_L = 0;
     x_R = 0;
@@ -339,4 +334,10 @@ void startFire () {
 }
 void stopFire () {
     digitalWrite(FIRE_BUTTON, LOW);
+}
+
+
+/* INTERRUPT activity: KEEP IT SHORT to avoid CPU overhead */
+void AMG88xx_ISR() {
+    intReceived = true;
 }
