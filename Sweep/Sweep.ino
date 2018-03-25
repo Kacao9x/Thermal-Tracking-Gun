@@ -90,13 +90,23 @@ char sense() {
         return 'l';
       } else if (pixels[4] > 26 || pixels[5] > 26 ) {
         return 'r';
-      } else (pixels[60] > 26 || pixels[61] > 26 ) {
+      } else if (pixels[60] > 26 || pixels[61] > 26 ) {
         return 'u';
+      }
       
       return 'p';
 }
+
+// void pulltrigger(){
+//     while(sense()){
+//       digitalWrite(trigger, LOW);
+//       delay(1000);
+//     }
+//     digitalWrite(trigger, HIGH);
+// }
+
 void pulltrigger(){
-    while(sense()){
+    while(sense() == 'm' || sense() == 'u' || sense() == 'r' || sense() == 'l'){
       digitalWrite(trigger, LOW);
       delay(1000);
     }
