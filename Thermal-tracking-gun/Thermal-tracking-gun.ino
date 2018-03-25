@@ -31,7 +31,8 @@ unsigned long searchDelay = 0;
 Servo servoMotor_X, servoMotor_Y;
 
 /* variables for controlling Trigger (FIRE) of the gun */
-#define FIRE_BUTTON     8
+#define FIRE_BUTTON     8           //pull the trigger
+#define FIRE_MOTOR      9           //spin the motor while searching the target
 
 /* variables for thermal sensor */
 Adafruit_AMG88xx amg;
@@ -55,6 +56,7 @@ void clearVar();
 void moveGun();
 void check_bottom_and_top_half();
 void check_left_right_half_with_fire();
+void chaseTarget();
 
 void setup() {
     Serial.begin(9600);
@@ -67,7 +69,8 @@ void setup() {
     thermal_sensor_interrupt_init();
     delay(1000);                                //let the sensor caliberate the room temp
 
-    pinMode(FIRE_BUTTON, OUTPUT);
+    pinMode(FIRE_BUTTON, OUTPUT);               //set FIRE_BUTTON pin as output
+    pinMode(FIRE_MOTOR, OUTPUT);
     
 }
 
@@ -76,8 +79,8 @@ void loop() {
     /* reset variable */
     clearVar();
     
-    if(intReceived) {
-        searchDelay = millis();
+    if (intReceived) {
+        //searchDelay = millis();
 
         //get which pixels triggered
         amg.getInterrupt(pixelInts);
@@ -91,71 +94,48 @@ void loop() {
         check_left_right_half_with_fire();        
         /* ------ Finished Horizontal Calculation -------- */
         
-        //clear the interrupt so we can get the next one!
-        amg.clearInterrupt();       // clear Interrupt
-        intReceived = false;        // reset the interrupt flag
         
         //Start shooting
         Serial.println(FIRE);
-         if (FIRE == true) {
-            digitalWrite(FIRE_BUTTON, LOW);
+        if (FIRE == true) {
+            
+            while (intReceived) {
+                startFire();
+                delay(500);
+                stopFire();
+            }
+            stopFire();
             fireDelay = millis();
         } else {
-            digitalWrite(FIRE_BUTTON, HIGH);
+            chaseTarget();
+
+            if( millis - fireDelay > 3000) {
+                stopFireMotor();
+                FIRE = false;
+            }
         }
 
-        moveGun();
+        //moveGun();
+        //chaseTarget();
+
+
+        //clear the interrupt so we can get the next one!
+        amg.clearInterrupt();       // clear Interrupt
+        intReceived = false;        // reset the interrupt flag
          
     } /* ------ END of Interrupt trigger received -------- */
 
     if(millis() - fireDelay > 1000){
-        digitalWrite(FIRE_BUTTON, HIGH);
+        //digitalWrite(FIRE_BUTTON, HIGH);
+        stopFireMotor();
+
     }
 
-    if(millis() - searchDelay > 1000){
-      // start searching 
-    }
-        
-        // if (!FIRE) {
-        //     long timeTracker = millis();
-        //     comparePositionValue();
-        //     if (millis() - timeTracker < 300) {
-        //         gun_fire(FIRE_BUTTON);
-        //         FIRE = true;
-        //         Serial.println("chasinggggg and fire");
-        //     } else {
-        //         gun_fire_hold(FIRE_BUTTON);
-        //         Serial.println("HOLDD");
-        //     }
-
-        // }
+    // if(millis() - searchDelay > 1000){
+    //   // start searching 
+    // }
 
 } /* ------ END of MAIN LOOP -------- */
-
-/* !!!!!!!!! Need to check how fast the servo can move */
-void comparePositionValue() {
-    /* move vertically */
-    if(y_N <  y_P) {
-        Serial. println("move up");
-        move_gun('U');
-        // TO-DO: move the servo
-    } else {
-        Serial.println("move down");
-        move_gun('D');
-        // TO-DO: move the servo
-    }
-
-    /* move horizontally */
-    if (x_L < x_R) {
-        Serial.println("move Right");
-        move_gun('R');
-        //move right;
-    } else {
-        Serial.println("move Left");
-        move_gun('L');
-        //move left;
-    }
-}
 
 
 void check_bottom_and_top_half() {
@@ -180,8 +160,8 @@ void check_left_right_half_with_fire(){
                 /* check if the central bit value is 1 */
                 if ( (j == 3 && i == 3) || (j == 3 && i == 4) ) {
                     FIRE = true;
-                    gun_fire(FIRE_BUTTON);
-                    Serial.println("BANG BANG");
+                    startFireMotor();
+                    break;
                 }
                 //value >> 1; // divide by 2: not working b/c value is int value
                 value /= 2;
@@ -197,8 +177,8 @@ void check_left_right_half_with_fire(){
                 /* check if the central bit value is 1 */
                 if( (j == 0 && i == 3) || (j == 0 && i == 4) ) {
                     FIRE = true;
-                    gun_fire(FIRE_BUTTON);
-                    Serial.println("BANG BANG");
+                    startFireMotor();
+                    break;
                 }
                 value /= 2;
             } else {
@@ -207,14 +187,6 @@ void check_left_right_half_with_fire(){
         }/* --- END of the left 4-bit interation --- */
     }   /* --- END of the row interation --- */
 
-    /* FIRE test on serial monitor*/
-//     Serial.println();
-//         if (FIRE == true ) {
-//             Serial.println("FIREEEEE");
-//             gun_fire(FIRE_BUTTON);
-//         } else {
-//             Serial.println("Checkkking target");
-//         }
 }
 
 
@@ -276,6 +248,35 @@ void clearVar(){
     y_P = 0;
 }
 
+/* !!!!!!!!! Need to check how fast the servo can move */
+void chaseTarget() {
+    /* move horizontally */
+    if (x_L > x_R && x_L <= x_max ) {
+        Serial.println("move Left");
+        xPos +=1;
+        servoMotor_X.write(xPos);
+        //move_gun('R');
+    } else if ( x_L < x_R && x_R >= x_min ) {
+        Serial.println("move Right");
+        xPos -= 1;
+        servoMotor_X.write(xPos);
+        //move_gun('L');
+    }
+
+    /* move vertically */
+    if (y_P >  y_N && y_P >= y_min ) {
+        Serial. println("move down");
+        yPos -= 1;
+        servoMotor_Y.write(yPos);
+        //move_gun('D');
+    } else if (y_P <  y_N && y_P <= y_max ){
+        Serial.println("move UP");
+        yPos += 1;
+        servoMotor_Y.write(yPos);
+        //move_gun('D');
+    }
+}
+
 void moveGun(){
   if(x_L > x_R){
     if(x_L <= x_max){
@@ -303,6 +304,7 @@ void moveGun(){
   }
 }
 
+
 void move_gun(const char* dir) {
     switch (*dir) {
         case 'L':
@@ -324,4 +326,17 @@ void move_gun(const char* dir) {
         default:
             break;
     }
+}
+
+void startFireMotor() {
+    digitalWrite(FIRE_MOTOR, HIGH);
+}
+void stopFireMotor() {
+    digitalWrite(FIRE_MOTOR, LOW);
+}
+void startFire () {
+    digitalWrite(FIRE_BUTTON, HIGH);
+}
+void stopFire () {
+    digitalWrite(FIRE_BUTTON, LOW);
 }
