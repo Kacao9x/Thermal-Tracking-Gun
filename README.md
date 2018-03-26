@@ -17,7 +17,8 @@ SOFTWARE:
 Harlin, an aerospace engineer came up with the idea of searching mode when no object is detected. We programmed a preset pattern for the gun to swing. Once the target is found, the gun fires.
 
 The sensor is an 8x8 array of IR thermal sensors. When connected to your microcontroller (Arduino) it will return an array of 64 individual infrared temperature readings over I2C. To make it easier to use, Interrupt Service is used to detect human body in front of sensor. Any reading on any pixel above TEMP_INT_HIGH (30 degree) will trigger the interrupt. We can tell which pixels triggered the interrupt by reading the bits in this array of bytes. Any bit that is a 1 means that pixel triggered
-        bit 0  bit 1  bit 2  bit 3  bit 4  bit 5  bit 6  bit 7
+
+     		bit 0  bit 1  bit 2  bit 3  bit 4  bit 5  bit 6  bit 7
 byte 0 |  0      1      0      0      0      0      0      1
 byte 1 |  0      0      0      0      0      0      0      0
 byte 2 |  0      0      0      0      0      0      0      0
