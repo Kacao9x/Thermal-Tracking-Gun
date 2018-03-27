@@ -1,5 +1,6 @@
 # Thermal-Tracking-Gun
 This awesome project got done within 36 hours in the #Hackathon spring 2018 at ISU.
+https://www.youtube.com/watch?v=y84CBwJzerY
 
 # Built With
 Arduino, C, 8x8 infrared camera, 2 x servos, a power-supply
