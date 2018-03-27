@@ -31,7 +31,7 @@ byte 7 |  0      0      0      0      0      0      0      0
 Next, we have to determine the direction for the gun to swing. We develop a bit-counting algorithm to compare the sum of each quarter. The servo will swing the gun the the area which has higher sum. The gun will FIRE if any pair of central pixels are 1 (e.g [3][3], [4][3], [3][4], [4][4]).
 
 # Challenges we ran into
-An issue we ran into was a crack in the supporting arm because the motor turned fast. Also, the chasing target mode acted very slowly. The reason is probably our algorithm to handle Interrupt service was not implemented efficiently
+An issue we ran into was a crack in the supporting arm because the motor turned fast. Also, the servo acted very slowly in the chasing target mode. The reason is probably our algorithm to handle Interrupt service and Thermal image processing were not optimized.
 
 # Accomplishments that we're proud of
 We are most proud of the simplicity in the mechanics of our design. Simple, robust and very effective. 
