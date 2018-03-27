@@ -9,12 +9,12 @@ Arduino, C, 8x8 infrared camera, 2 x servos, a power-supply
 # What it does
 
 # How we built it
-MECHANICAL: We used 2 pairs of wooden poles to make the gun rack. These poles were glued together and mounted on an 8-inch spinning disk which is controlled by a servo. When spinning, the disk will make the gun barrel swing horizontally. There was another motor with a supporting arm that connected to the barrel. The gun could swing vertically easily when the arm pushed/pulled.
+MECHANICAL: We used 2 pairs of wooden poles to make the gun rack. These poles were glued together and mounted on an 8-inch spinning disk which was controlled by a servo. When spinning, the disk will make the gun barrel swing horizontally. There was another motor with a supporting arm that connected to the barrel. The gun could swing vertically easily when the arm pushed/pulled.
 
-ELECTRICAL: There is a few notice here because we use a rotating nerf gun. When we pull the trigger, the gun barrel will rotate for 0.5s before it actually fire. What appears to be the mechanism of the shooting mode is there are 2 separate motors inside the gun, one for rotating barrel and one for Shot. To control these motors, we decided to use 2 relays. Every connection from the trigger to motor had been disconnected before hand.
+ELECTRICAL: A few notice here because we use a rotating nerf gun. When we pull the trigger, the gun barrel will rotate for 0.5s before it actually fire. What appears to be the mechanism of the shooting mode is there are 2 separate motors inside the gun, one for rotating barrel and one for Shot. To control these motors, we decided to use 2 relays. Every connection from the trigger to motor had been disconnected before hand.
 
 SOFTWARE: 
-Harlin, an aerospace engineer came up with the idea of searching mode when no object is detected. We programmed a preset pattern for the gun to swing. Once the target is found, the gun fires.
+Harlin, an aerospace engineer came up with the idea of making a preset circle pattern so that the gun would sweep a certain area. Once an object is detected. the gun will stop moving and start firing. What if the object is moving out of the center of the aim? We used interrupt service to flag if that happens. Then we implemented an algo to compare the temperature readout of central pixels and 8 pixels from the edge pixel. This comparision help us demterine the direction to swing. However, this tracking feature didn't perform well. The servo reacted quite slow and lost the target, even though everything looked good in Serial monitor.
 
 The sensor is an 8x8 array of IR thermal sensors. When connected to your microcontroller (Arduino) it will return an array of 64 individual infrared temperature readings over I2C. To make it easier to use, Interrupt Service is used to detect human body in front of sensor. Any reading on any pixel above TEMP_INT_HIGH (30 degree) will trigger the interrupt. We can tell which pixels triggered the interrupt by reading the bits in this array of bytes. Any bit that is a 1 means that pixel triggered
 
